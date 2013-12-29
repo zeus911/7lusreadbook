@@ -9,13 +9,13 @@
 #include <QLayout>
 #include "block.h"
 #include <QAbstractSlider>
-
-QHash<qint64,fileblock*> blocks;
+#include <set>
+QMap<qint64,fileblock*> blocks;
 QFile *file;
 QTextCodec *codec;
 qint64 filepos,maxblock,realfilesize;
 QSettings *settings;
-unsigned int stopcode=1,bomsize=0;
+unsigned int stopcode=1,bomsize=0,currentblocks=0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -100,7 +100,7 @@ void MainWindow::loadFile(QString &fn)
     if(file->isOpen())
     {
         settings->setValue(file->fileName(),filepos);
-        QHash<qint64,fileblock*>::iterator block;
+        QMap<qint64,fileblock*>::iterator block;
         block=blocks.begin();
         while(block!=blocks.end())
         {
@@ -109,6 +109,7 @@ void MainWindow::loadFile(QString &fn)
         }
         blocks.clear();
         file->close();
+        currentblocks=0;
     }
     recentFile.prepend(fn);
     file->setFileName(fn);

@@ -5,8 +5,8 @@
 #include <QFile>
 #include <QHash>
 
-extern unsigned int stopcode,bomsize;
-extern QHash<qint64,fileblock*> blocks;
+extern unsigned int stopcode,bomsize,currentblocks;
+extern QMap<qint64,fileblock*> blocks;
 extern QFile *file;
 extern qint64 realfilesize;
 
@@ -29,6 +29,7 @@ fileblock::~fileblock()
     {
         delete[] buf;
         available=false;
+        currentblocks--;
     }
     stops.clear();
 }
@@ -39,6 +40,7 @@ void fileblock::releaseMemory()
     {
         delete[] buf;
         available=false;
+        currentblocks--;
     }
     if(code!=stopcode)
     {
@@ -62,5 +64,6 @@ void fileblock::loadFile()
     else
     {
         available=true;
+        currentblocks++;
     }
 }

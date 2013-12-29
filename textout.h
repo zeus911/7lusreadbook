@@ -38,6 +38,7 @@ public:
     bool lineMove(bool up, bool ifupdate=true);
     bool pageMove(bool up);
     bool randomMove(qint64 newvalue);
+    void clearblock(qint64);
 private:
     bool blockAvailable(qint64 area);
     qint64 tarea;
@@ -47,6 +48,7 @@ private:
     QString ts;
     int readBuf(char* out, qint64 blockid, int pos, int length);
     int guessMode;
+    
 signals:
     
 public slots:

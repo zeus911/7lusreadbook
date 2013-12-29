@@ -6,12 +6,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-extern QHash<qint64,fileblock*> blocks;
+extern QMap<qint64,fileblock*> blocks;
 extern QFile *file;
 extern QTextCodec *codec;
 extern qint64 filepos,maxblock,realfilesize;
 extern QSettings *settings;
-extern unsigned int stopcode;
+extern unsigned int stopcode,currentblocks;
+
 
 textOut::textOut(QWidget *parent) :
     QWidget(parent)
@@ -618,6 +619,7 @@ bool textOut::blockAvailable(qint64 area)
         if(nfb->available)
         {
             blocks.insert(area,nfb);
+            clearblock(area);
             return true;
         }
         else
@@ -633,6 +635,7 @@ bool textOut::blockAvailable(qint64 area)
         nfb->loadFile();
         if(nfb->available)
         {
+            clearblock(area);
             return true;
         }
         else
@@ -960,9 +963,55 @@ bool textOut::randomMove(qint64 newvalue)
         filepos=newvalue+t1;
         if(filepos>=realfilesize-1)
         {
+            filepos=realfilesize-1;
             lineMove(true);
         }
         return true;
     }
     return false;
+}
+
+void textOut::clearblock(qint64 cb)
+{
+    int n=currentblocks-maxblockinmemory;
+    if(n>0)
+    {
+        int i;
+        //qint64 lb=filepos%POP_BLOCKSIZE;
+        qint64 first,last;
+        QMap<qint64,fileblock*>::iterator ite1,ite2;
+        for(i=0;i<n;i++)
+        {
+            ite1=blocks.begin();
+            while(ite1.value()->available!=true)
+            {
+                ite1++;
+            }
+            first=ite1.key();
+            ite2=blocks.end()-1;
+            while(ite2.value()->available!=true)
+            {
+                ite2--;
+            }
+            last=ite2.key();
+            first=cb-first;
+            last=last-cb;
+            if(first<=0)
+            {
+                ite2.value()->releaseMemory();
+            }
+            else if(last<=0)
+            {
+                ite1.value()->releaseMemory();
+            }
+            else if(first>last)
+            {
+                ite1.value()->releaseMemory();
+            }
+            else
+            {
+                ite2.value()->releaseMemory();
+            }
+        }
+    }
 }
