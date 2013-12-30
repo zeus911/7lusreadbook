@@ -87,6 +87,7 @@ void textOut::paintEvent(QPaintEvent *eve)
             bool isover=false;
             //bool hasnewline=false;
             QTextDecoder decoder(codec);
+            fileblock* tfb;
 
             int readlength;
             int endpos=-1;
@@ -236,6 +237,40 @@ cc:                     if(outpos.y()>=this->height())//如果现在的行是屏
                     {
                         if(endpos!=-1)
                         {
+                            if(tpos<endpos)//对于断行的汉字刚好在两块之间的特殊处理
+                            {
+                                tfb=blocks[tarea-1];
+                                tstop=tfb->stops.find(endpos);
+                                if(tstop==tfb->stops.end())
+                                {
+                                    tstop=tfb->stops.insert(endpos,false);
+                                }
+                                if(recorded&&tstop!=stop)
+                                {
+                                    while(tstop!=tfb->stops.begin())
+                                    {
+                                        if(--tstop==stop)
+                                        {
+                                            break;
+                                        }
+                                        tstop=fb->stops.erase(tstop);
+                                    }
+                                    stop.value()=true;
+                                }
+                                if(outpos.y()>=this->height())
+                                {
+                                    isover=true;
+                                    break;
+                                }
+                                outpos.rx()=padding;
+                                outpos.ry()+=h;
+                                painter.drawText(outpos,ts);
+                                outpos.rx()+=t;
+                                endpos=-1;
+                                recorded=true;
+                                stop=tstop;
+                                continue;
+                            }
                             tpos=endpos;
                         }
                         else
